@@ -1,0 +1,11 @@
+# Node modules
+/node_modules
+
+# Web Storm configuration files
+/.DS_Store
+/.idea
+*.xml
+
+# JavaScript files
+*.js
+*.js.map

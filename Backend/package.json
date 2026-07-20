@@ -1,0 +1,36 @@
+{
+  "name": "blackjack",
+  "version": "1.0.0",
+  "description": "Final project of web application development",
+  "main": "src/index.coffee",
+  "engines": {
+    "node": ">=16 <17"
+  },
+  "scripts": {
+    "start": "coffee src/index.coffee",
+    "dev": "nodemon --exec coffee src/index.coffee",
+    "start:watch": "nodemon --exec coffee src/index.coffee",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Erick Bautista, Felipe Jimenez, Valentin Ochoa",
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": ""
+  },
+  "devDependencies": {
+    "@babel/core": "^7.10.2",
+    "@babel/preset-env": "^7.10.2",
+    "coffeescript": "^2.5.1"
+  },
+  "dependencies": {
+    "body-parser": "^1.19.0",
+    "cli-color": "^2.0.0",
+    "express": "^4.17.1",
+    "mongodb-memory-server": "^8.16.0",
+    "mongoose": "^5.9.16",
+    "nodemon": "^2.0.3",
+    "underscore": "^1.10.2",
+    "uniqid": "^5.2.0"
+  }
+}

@@ -1,0 +1,22 @@
+# Dependencias
+node_modules/
+
+# Builds
+/Frontend/build/
+/Backend/dist/
+
+# CoffeeScript compilado (la fuente son los .coffee)
+/Backend/src/**/*.js
+/Backend/src/**/*.js.map
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Entornos locales (se versiona solo Frontend/.env base)
+.env.local
+.env.*.local
+
+# Sistema
+.DS_Store

@@ -1,0 +1,18 @@
+{
+  "name": "veintiuno",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Juego de BlackJack (21) multijugador: API en Node/CoffeeScript y cliente en React, en un monorepo que arranca con un comando.",
+  "engines": {
+    "node": ">=16 <17"
+  },
+  "scripts": {
+    "setup": "bash scripts/setup.sh",
+    "dev": "bash scripts/dev.sh",
+    "backend": "npm --prefix Backend run dev",
+    "frontend": "npm --prefix Frontend start"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
