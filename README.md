@@ -1,9 +1,9 @@
 # veintiuno
 
-Juego de **BlackJack (21) multijugador**. Monorepo con dos partes:
+Juego de **Veintiuno (BlackJack) multijugador**. Monorepo con dos partes:
 
-- **Backend/** — Node + Express escrito en **CoffeeScript**. API REST. Usa MongoDB
-  **en memoria** (mongodb-memory-server): no necesitas instalar Mongo.
+- **Backend/** — Node + Express escrito en **CoffeeScript**. API REST. Las partidas
+  viven **en memoria**: no necesitas instalar ninguna base de datos.
 - **Frontend/** — React (Create React App) que consume la API vía Axios.
 
 ## Requisitos
@@ -20,8 +20,7 @@ npm run dev     # levanta Backend (:8080) y Frontend (:3000) juntos
 
 Luego abre http://localhost:3000
 
-> La primera vez, el Backend descarga el binario de MongoDB en memoria (~1 min).
-> Los datos **no persisten** al reiniciar; es intencional para desarrollo local.
+> Las partidas **no persisten** al reiniciar el Backend; es intencional para desarrollo local.
 
 ## Comandos útiles
 
@@ -35,7 +34,7 @@ Luego abre http://localhost:3000
 ## Arquitectura
 
 ```
-Frontend (React :3000)  --REST/HTTP-->  Backend (Express :8080)  -->  Mongo en memoria
+Frontend (React :3000)  --REST/HTTP-->  Backend (Express :8080)  -->  partidas en memoria
 ```
 
 El frontend apunta al backend mediante `Frontend/.env` (`REACT_APP_LOCALHOST`).
@@ -44,5 +43,5 @@ El frontend apunta al backend mediante `Frontend/.env` (`REACT_APP_LOCALHOST`).
 
 - El código del backend vive en `.coffee`; los `.js` compilados NO se versionan
   (ver `.gitignore`). CoffeeScript es la única fuente de verdad.
-- Persistencia real (MongoDB Atlas), despliegue y roadmap: ver el plan de
+- Persistencia real, despliegue y roadmap: ver el plan de
   desarrollo (Notion).
