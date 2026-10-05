@@ -28,7 +28,13 @@ One player vs. the dealer. Multiplayer is out of scope until this works end to e
 
 ## Screen
 
-Bet → deal → Hit / Stand → result → new hand. No "wait for your turn" message when playing alone.
+Home: the number and a play button. Play creates a game and opens the table directly.
+
+Table: Bet → deal → Hit / Stand → result → new hand. No "wait for your turn" message when playing alone.
+
+- The player's name is shown under their cards, defaults to "Jugador", is edited in place and remembered.
+- An interactive tutorial (modal) opens on the first game and from "cómo se juega" in the top bar.
+- The bet field has no up/down arrows.
 
 ## Done when
 
