@@ -1,211 +1,91 @@
 import React, {Component} from 'react'
 import '../css/Naipes.css'
 import Card from './Card'
-import {apostar, evaluarMano, finalizarPartida, peticionPedir} from './Peticiones'
+import {NombreEditable} from './Nombre'
 import swal from 'sweetalert'
-import {Redirect} from 'react-router-dom'
+
+const TITULOS = {jugador: 'ganaste', croupier: 'perdiste', empate: 'empate'}
 
 class Naipes extends Component {
     constructor(props) {
-
         super(props)
 
-        this.state = {
-            left_card: 3,
-            right_card: 3,
-            bet: "",
-            credit: 100,
-            score_jugador: 0,
-            score_croupier: 0,
-            inGame: false,
-            ganador: "",
-            irMenu: false
-        }
-
+        this.state = {bet: 10}
     }
 
-    /** <---- Manejadores ----> */
-
-    /** Evento para obtener el input del usuario */
     handleInputBet = (evt) => {
+        this.setState({bet: evt.target.value === "" ? "" : parseFloat(evt.target.value)})
+    }
+
+    handleApostar = (evt) => {
         evt.preventDefault()
-        this.setState({
-            bet: parseInt(evt.target.value),
-        })
+
+        const {vista, onApostar} = this.props
+        const {bet} = this.state
+
+        if (!Number.isInteger(bet) || bet < 1) swal('¡Ops!', 'Ingresa una apuesta de al menos 1', 'error')
+        else if (bet > vista.credito) swal('¡Ops!', 'No puedes apostar un monto mayor al crédito', 'error')
+        else onApostar(bet)
     }
 
-    /** Evento para restar al wallet */
-    handleWallet = () => {
-        const {credit, bet} = this.state
-        const {jugador, idJugador, jugadorActual, idPartida} = this.props
+    crearCartas = (rol) => rol.mano.map((carta, i) => (
+        <Card key={i} value={carta.carta} visible={carta.visible}/>
+    ))
 
-        if (bet > credit) swal('¡Ops!', 'No puedes apostar un monto mayor al crédito', 'error')
-        else if (bet < 0) swal('¡Ops!', 'No puedes ingresar número negativo', 'error')
-        else {
-            apostar(jugador, bet, idPartida).then(res => {
-                this.setState({
-                        credit: res,
-                        bet: "",
-                        inGame: true
-                    }
-                )
-            })
-            if (idJugador !== jugadorActual) {
-                swal('¡Ops!', 'Espera tu turno', 'error')
-            }
+    estado = () => {
+        const {vista} = this.props
+        const {estado, resultado, puntos_jugador: puntos} = vista
+
+        if (estado === 'apuesta') return {titulo: 'haz tu apuesta', detalle: 'las cartas se reparten al apostar'}
+        if (estado === 'jugando') return {titulo: 'tu turno', detalle: `${puntos} puntos`}
+        return {
+            titulo: TITULOS[resultado.ganador],
+            detalle: `${resultado.motivo} · dealer ${resultado.score_croupier}, tú ${resultado.score_jugador}`
         }
-    }
-
-    /** <---- Funciones ----> */
-
-    pedirCarta = (rol, rolID) => {
-        const {idPartida} = this.props
-
-        if (rolID !== null) {
-            peticionPedir(rol, rolID, idPartida).then(mano => {
-                if (rol === 'jugador') this.evaluarManoJugador(rol, rolID, mano)
-                else this.evaluarManoCroupier(rol, rolID, mano)
-            })
-        }
-    }
-
-    evaluarManoJugador = (rol, rolID, mano) => {
-        const {setHand} = this.props
-
-        evaluarMano(rolID).then((valor) => {
-            this.setState({score_jugador: valor})
-
-            if (this.state.score_jugador > 21) {
-                swal("Oops perdiste!", 'Rebasaste la casa o tienes mas de 21 en tu mano', 'error')
-                this.reiniciarEstados()
-            }
-        })
-        setHand(rol, mano)
-    }
-
-    evaluarManoCroupier = (rol, rolID) => {
-        const {setHand} = this.props
-
-        evaluarMano(rolID).then((valor) => {
-            this.setState({score_croupier: valor})
-
-            if (this.state.score_croupier < 17)
-                peticionPedir(rol, rolID).then(mano => setHand(rol, mano))
-
-            this.reiniciarEstados()
-        })
-    }
-
-    reiniciarEstados = () => {
-        const {setHand, reiniciarPartida, jugador, pedirTurno} = this.props
-        pedirTurno()
-        finalizarPartida(jugador.id).then(res => {
-            this.setState({
-                score_jugador: res.data.score_jugador,
-                score_croupier: res.data.score_croupier,
-                inGame: false,
-                ganador: res.data.ganador,
-                credit: res.data.credito
-            })
-
-            if (res.data.credito === 0 && res.data.ganador === 'croupier')
-                swal('Oops!', 'Perdiste todo tu crédito', 'error').then(() => this.setState({irMenu: true}))
-
-            reiniciarPartida()
-            setHand("croupier", res.data.croupier)
-        })
-    }
-
-    /** <---- Componentes ----> */
-
-    crearCartas = (rol, side) => {
-        let cartas
-
-        if (rol != null) {
-            let space = -3
-
-            cartas = rol.mano.map((carta, i) => {
-                space += 3
-                return side ?
-                    (<Card key={i} value={carta.carta} visible={carta.visible} style={{left: `${space}rem`}}
-                           styleCard={carta.visible ? "naipe-selectionL" : "naipe-selectionL-hidden"}/>) :
-                    (<Card key={i} value={carta.carta} visible={carta.visible} style={{right: `${space}rem`}}
-                           styleCard="naipe-selectionR"/>)
-            })
-        }
-
-        return cartas
     }
 
     render() {
-        const {jugador, croupier, partida_finalizada, nombre, idJugador, jugadorActual} = this.props
-        const {credit, bet, score_croupier, score_jugador, inGame, ganador, irMenu} = this.state
-
-        let cartasJugador = this.crearCartas(jugador, false)
-        let cartasCroupier = this.crearCartas(croupier, true)
-
-        let winner = (ganador === "croupier") ? <span>Perdiste</span> : <span>Ganaste</span>
+        const {nombre, vista, onPedir, onPlantarse, onSeguir} = this.props
+        const {bet} = this.state
+        const {estado} = vista
+        const {titulo, detalle} = this.estado()
 
         return (
             <>
-                <div className="wrapper">
-
-                    <div className="naipesL">
-                        <h5 className="title-dealer white-text">Dealer</h5>
-                        {cartasCroupier}
+                <main className="table">
+                    <div className="seat">
+                        <span className="seat-name serif">dealer</span>
+                        <div className="hand">{this.crearCartas(vista.croupier)}</div>
                     </div>
-                    <div className="naipesR">
-                        <h5 className="title-jugador white-text">{nombre ? `${nombre}` : 'Jugador'}</h5>
-                        {cartasJugador}
+                    <div className="status" aria-live="polite">
+                        <div className="status-title serif">{titulo}</div>
+                        <div className="status-detail">{detalle}</div>
                     </div>
+                    <div className="seat">
+                        <div className="hand">{this.crearCartas(vista.jugador)}</div>
+                        <NombreEditable inicial={nombre || 'Jugador'}/>
+                    </div>
+                </main>
+                <div className="controls">
+                    {estado === 'apuesta' && (
+                        <form className="bet" onSubmit={this.handleApostar}>
+                            <label htmlFor="apuesta">tu apuesta ($)</label>
+                            <input id="apuesta" className="bet-input" type="number" min="1" step="1"
+                                   value={bet} onChange={this.handleInputBet}/>
+                            <button type="submit" className="btn">apostar</button>
+                        </form>
+                    )}
+                    {estado === 'jugando' && (
+                        <>
+                            <button type="button" className="btn" onClick={onPlantarse}>plantarse</button>
+                            <button type="button" className="btn btn-ghost" onClick={onPedir}>pedir</button>
+                        </>
+                    )}
+                    {estado === 'terminada' && (
+                        <button type="button" className="btn" onClick={onSeguir}>seguir jugando</button>
+                    )}
                 </div>
-                <div className="container row">
-                    <div className="col l4 m12 s12 center-align">
-                        <h5 className="white-text">Creditos: {credit}$</h5>
-                    </div>
-                    <div className="col l4 m12 s12 center-align">
-                        {partida_finalizada && (
-                            <>
-                                <h5 className="white-text">Score final</h5>
-                                <br/>
-                                <h6 className="white-text">{score_croupier}{" "} - {" "}{score_jugador}</h6>
-                            </>
-                        )}
-                    </div>
-                    <h5 className={partida_finalizada ? "col l4 m12 s12 center-align white-text" : "hide col m4 s12 center-align"}>
-                        {winner}
-                    </h5>
-                </div>
-                <div className="container row flex-align-center-buttons">
-                    <div className="col l4 m12 s12 flex-align-center padding-button">
-                        <div className="input-field">
-                            <input value={bet} type="number" onChange={this.handleInputBet}/>
-                        </div>
-                        <button onClick={this.handleWallet} className="waves-effect waves-light btn"
-                                disabled={partida_finalizada}>
-                            Apostar
-                        </button>
-                    </div>
-                    <div className="col l4 m12 s12 center-align padding-button">
-                        <button onClick={() => this.pedirCarta("jugador", jugador.id)}
-                                className="waves-effect waves-light btn"
-                                disabled={!inGame || jugadorActual !== idJugador}>
-                            Pedir
-                        </button>
-                    </div>
-                    <div className="col l4 m12 s12 center-align padding">
-
-                        <button onClick={() => this.pedirCarta("croupier", croupier.id)}
-                                className="waves-effect waves-light btn"
-                                disabled={!inGame || jugadorActual !== idJugador}>
-                            Plantarse
-                        </button>
-                    </div>
-
-                </div>
-                {irMenu && (<Redirect to="/"/>)}
             </>
-
         )
     }
 }

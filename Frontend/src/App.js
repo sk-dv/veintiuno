@@ -1,63 +1,63 @@
 import React, {Component} from 'react'
-import {BrowserRouter, Route, Switch} from 'react-router-dom'
-import 'materialize-css/dist/css/materialize.min.css'
+import {BrowserRouter, Redirect, Route, Switch} from 'react-router-dom'
 import './App.css'
 import Login from './components/js/Login'
 import Start from './components/js/Start'
 import Game from './components/js/Game'
 import Error404 from './components/js/Error404'
 
+const CLAVE = 'blackjack-partida'
+
+const leerPartida = () => {
+    try {
+        return JSON.parse(sessionStorage.getItem(CLAVE)) || {}
+    } catch (e) {
+        return {}
+    }
+}
+
+const guardarPartida = (partida) => {
+    try {
+        sessionStorage.setItem(CLAVE, JSON.stringify(partida))
+    } catch (e) {
+        /* the game still works without storage; it just can't survive a refresh */
+    }
+}
+
 class App extends Component {
 
     constructor(props) {
-        super(props);
+        super(props)
 
-        this.state = {
-            idPartida: "",
-            idJugador: "",
-            nombre: "",
-            jugador: {},
-            croupier: {}
-        }
+        this.state = {partida: leerPartida()}
     }
 
-    configurarVistaJugador = (idPartida, idJugador, nombre, jugador, croupier) => {
-        this.setState({
-            idPartida: idPartida,
-            idJugador: idJugador,
-            nombre: nombre,
-            jugador: jugador,
-            croupier: croupier
-        })
-        return jugador !== {} && croupier !== {}
+    configurarPartida = (idPartida, idJugador, nombre) => {
+        const partida = {idPartida, idJugador, nombre}
+        guardarPartida(partida)
+        this.setState({partida})
     }
 
+    limpiarPartida = () => {
+        guardarPartida({})
+        this.setState({partida: {}})
+    }
 
     render() {
-        let loginProps = {
-            configurarVistaJugador: this.configurarVistaJugador,
-        }, gameProps = {
-            game: this.state
-        }
+        const {partida} = this.state
 
         return (
-            <>
-                <BrowserRouter>
-                    <Switch>
-                        <Route exact path="/" component={Start}/>
-                        <Route exact
-                               path="/crear"
-                               render={() => <Login {...loginProps}/>}
-                        />
-                        <Route exact
-                               path="/jugar-partida"
-                               render={() => <Game {...gameProps}/>}
-                        />
-                        <Route component={Error404}/>
-                    </Switch>
-                </BrowserRouter>
-            </>
-        );
+            <BrowserRouter>
+                <Switch>
+                    <Route exact path="/" component={Start}/>
+                    <Route exact path="/crear" render={() => <Login configurarPartida={this.configurarPartida}/>}/>
+                    <Route exact path="/jugar-partida" render={() => (
+                        partida.idPartida ? <Game partida={partida} onTerminar={this.limpiarPartida}/> : <Redirect to="/"/>
+                    )}/>
+                    <Route component={Error404}/>
+                </Switch>
+            </BrowserRouter>
+        )
     }
 }
 

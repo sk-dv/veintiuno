@@ -1,55 +1,112 @@
-/*.card {*/
-/*    width: 10rem;*/
-/*    height: 14rem;*/
-/*    box-shadow: 0 0 4px rgba(0, 0, 0, 0.4);*/
-/*    border-radius: 10px;*/
-/*    position: absolute;*/
-/*    transition: margin-right 0.4s ease;*/
-/*    left: 1px;*/
-/*    !*right: 1px;*!*/
-/*}*/
-
-.color-red {
-    color: red;
+:root {
+    --cw: 112px;
 }
 
-.size-item-icon-up {
-    font-size: 2rem;
-    position: absolute;
-    top: 1rem;
-    left: 1rem;
+.hand {
+    display: flex;
+    min-height: calc(var(--cw) * 1.4);
+    padding-right: calc(var(--cw) * 0.42);
 }
 
-.size-item-value-up {
-    font-size: 1.5rem;
-    position: absolute;
-    left: 1.1rem;
-}
-
-.size-item-icon-down {
-    font-size: 2rem;
-    position: absolute;
-    top: 10rem;
-    right: 1rem;
-}
-
-.size-item-value-down {
-    font-size: 1.5rem;
-    position: absolute;
-    top: 12rem;
-    right: 1.1rem;
-}
-
-.body-card-item {
-    padding: 0 2rem;;
-    height: 100%;
-    /*flex-direction: column;*/
-    flex-wrap: wrap;
-}
-
-.icon {
-    /*padding-left:1rem;*/
-    font-size: 2.4rem;
+.card {
     position: relative;
-    overflow: hidden;
+    flex-shrink: 0;
+    width: var(--cw);
+    height: calc(var(--cw) * 1.4);
+    margin-right: calc(var(--cw) * -0.42);
+    border-radius: 10px;
+}
+
+.card-face {
+    position: absolute;
+    inset: 0;
+    border-radius: 10px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+    color: var(--ink);
+}
+
+.card-face.red {
+    color: var(--red);
+}
+
+.card-back {
+    position: absolute;
+    inset: 0;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    background: repeating-linear-gradient(45deg, var(--back), var(--back) 6px, var(--line) 6px, var(--line) 7px);
+}
+
+.card-index {
+    position: absolute;
+    top: 8%;
+    left: 10%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    line-height: 1;
+}
+
+.card-rank {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: calc(var(--cw) * 0.22);
+    font-weight: 500;
+}
+
+.card-suit {
+    font-size: calc(var(--cw) * 0.17);
+}
+
+.card-body {
+    position: absolute;
+    top: 19%;
+    bottom: 19%;
+    left: 39%;
+    right: 39%;
+}
+
+.pip {
+    position: absolute;
+    font-size: calc(var(--cw) * 0.15);
+    line-height: 1;
+    transform: translate(-50%, -50%);
+}
+
+.pip-flip {
+    transform: translate(-50%, -50%) rotate(180deg);
+}
+
+.face-big {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+}
+
+.face-big-value {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-style: italic;
+    font-size: calc(var(--cw) * 0.5);
+}
+
+.face-big-suit {
+    font-size: calc(var(--cw) * 0.34);
+}
+
+@media (max-width: 620px) {
+    :root {
+        --cw: 84px;
+    }
+}
+
+/* Short windows: smaller cards so the bet controls stay on screen */
+@media (max-height: 860px) and (min-width: 621px) {
+    :root {
+        --cw: 92px;
+    }
 }

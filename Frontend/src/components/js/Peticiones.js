@@ -1,74 +1,30 @@
-import Axios from "axios";
+import Axios from "axios"
 
-export const iniciar = async () => {
-    let players = {}
+const API = `http://${process.env.REACT_APP_LOCALHOST}`
 
-    await Axios.get(`http://${process.env.REACT_APP_LOCALHOST}/iniciar`).then((res) => {
-        players.croupier = res.data.croupier
-        players.jugador = res.data.jugador
-    })
-
-    return players
+/** Every call resolves to {data, error}; error is a message the player can read. */
+const llamar = async (metodo, ruta, cuerpo) => {
+    try {
+        const res = await Axios({method: metodo, url: `${API}${ruta}`, data: cuerpo})
+        return {data: res.data, error: null, status: res.status}
+    } catch (err) {
+        const mensaje = err.response && err.response.data && err.response.data.message
+        return {data: null, error: mensaje || 'No se pudo conectar con el servidor', status: err.response ? err.response.status : 0}
+    }
 }
 
-export const apostar = async (jugador, bet, partida) => {
-    let credit = 0
+export const crearPartida = (nombre) => llamar('post', '/partidas', {nombre})
 
-    await Axios.post(`http://${process.env.REACT_APP_LOCALHOST}/apostar`, {
-        id_partida: partida,
-        id_jugador: jugador.id,
-        cantidad: bet
-    }).then((res) => {
-        credit = res.data.credito
-        bet = ""
-    }).catch((err) => {
-        console.log(err)
-    })
+export const verPartida = (pin) => llamar('get', `/partidas/${pin}`)
 
-    return credit
-}
+export const apostar = (pin, idJugador, cantidad) =>
+    llamar('post', `/partidas/${pin}/apostar`, {id_jugador: idJugador, cantidad})
 
-export const evaluarMano = async (rolID) => {
-    let valor = -1
+export const pedir = (pin, idJugador) =>
+    llamar('post', `/partidas/${pin}/pedir`, {id_jugador: idJugador})
 
-    await Axios.post(`http://${process.env.REACT_APP_LOCALHOST}/evaluar-mano`, {
-        id: rolID
-    }).then((res) => {
-        valor = res.data.valor
-    }).catch((err) => {
-        console.log(err)
-    })
+export const plantarse = (pin, idJugador) =>
+    llamar('post', `/partidas/${pin}/plantarse`, {id_jugador: idJugador})
 
-    return valor
-}
-
-export const peticionPedir = async (rol, rolID, partida) => {
-    let mano = []
-
-    await Axios.post(`http://${process.env.REACT_APP_LOCALHOST}/pedir`, {
-        id_jugador: rolID,
-        id_partida: partida
-    }).then((res) => {
-        // console.log("Peticion pedir con id", res.data, rolID)
-        mano = res.data.mano
-    }).catch((err) => {
-        console.log(err)
-    })
-
-    return mano
-}
-
-export const finalizarPartida = async (idJugador) => {
-    let partida = {}
-
-    await Axios.post(`http://${process.env.REACT_APP_LOCALHOST}/evaluar-partida`, {id: idJugador})
-    .then((res) => {
-        // console.log(res)
-        partida = res
-    }).catch((err) => {
-        console.log(err)
-    })
-
-    return partida
-}
-
+export const reiniciar = (pin, idJugador) =>
+    llamar('post', `/partidas/${pin}/reiniciar`, {id_jugador: idJugador})

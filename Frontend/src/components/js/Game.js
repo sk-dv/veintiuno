@@ -1,9 +1,10 @@
 import React, {Component} from 'react'
-import {Link} from "react-router-dom";
-import Axios from 'axios'
-import logo from '../../img/logo-blackjack.png'
+import {Link, Redirect} from "react-router-dom"
+import swal from 'sweetalert'
+import Nav from './Nav'
 import Naipes from './Naipes'
-import repartir from '../../models/repartir.json'
+import HowToPlay, {tutorialVisto} from './HowToPlay'
+import {apostar, pedir, plantarse, reiniciar, verPartida} from './Peticiones'
 
 class Game extends Component {
 
@@ -11,121 +12,82 @@ class Game extends Component {
         super(props)
 
         this.state = {
-            finalizar: 'deshabilitado',
-            jugador: undefined,
-            croupier: undefined,
-            multijugador: false,
-            partida_finalizada: false,
-            jugadores: [],
-            jugadorActual: ""
+            vista: null,
+            irMenu: false,
+            ayuda: !tutorialVisto()
         }
-
     }
 
-    reiniciarPartida = () => {
-        this.setState({
-            finalizar: 'habilitado',
-            partida_finalizada: true
+    componentDidMount() {
+        const {partida} = this.props
+
+        verPartida(partida.idPartida).then(({data, error, status}) => {
+            if (error) this.avisarError(error, status)
+            else this.setState({vista: data})
         })
     }
 
-    handleReiniciarPartida = () => {
-        this.setState({partida_finalizada: false})
+    /** Runs a server action and shows the new table, or the reason it was rejected. */
+    ejecutar = (accion, ...args) => {
+        const {partida} = this.props
 
-        Axios.get(`http://${process.env.REACT_APP_LOCALHOST}/reiniciar`).then((res) => {
-            this.setState({
-                jugador: res.data.jugador,
-                croupier: res.data.croupier,
-                finalizar: 'habilitada'
-            })
-        }).catch(() => {
-            this.setState({
-                jugador: repartir.jugador,
-                croupier: repartir.croupier
-            })
+        return accion(partida.idPartida, partida.idJugador, ...args).then(({data, error, status}) => {
+            if (error) return this.avisarError(error, status)
+
+            this.setState({vista: data})
+
+            if (data.estado === 'terminada' && data.credito < 1) {
+                swal('¡Ops!', 'Perdiste todo tu crédito', 'error').then(() => this.terminar())
+            }
         })
     }
 
-    setHand = (name, hand) => {
-        let copy = this.state[name]
-        copy.mano = hand
-        this.setState({
-            [name]: copy
-        })
+    /** A 404 means the server no longer has this game (it was restarted): go back to the start. */
+    avisarError = (error, status) => {
+        if (status === 404) {
+            return swal('Tu partida ya no existe', 'El servidor se reinició y se perdió la partida. Crea una nueva.', 'info')
+                .then(() => this.terminar())
+        }
+        return swal('¡Ops!', error, 'error')
     }
+
+    terminar = () => {
+        this.props.onTerminar()
+        this.setState({irMenu: true})
+    }
+
+    apostar = (cantidad) => this.ejecutar(apostar, cantidad)
+    pedir = () => this.ejecutar(pedir)
+    plantarse = () => this.ejecutar(plantarse)
+    seguirJugando = () => this.ejecutar(reiniciar)
 
     render() {
-        const {game} = this.props
-        const {jugador, croupier, multijugador, finalizar, partida_finalizada, jugadorActual} = this.state
+        const {partida} = this.props
+        const {vista, irMenu, ayuda} = this.state
 
-        console.log(game)
-
-        let exist = (rol) => {
-            return rol != null
-        }
-
-        let jugador_card = exist(croupier) ? jugador : game.jugador
-        let croupier_card = exist(croupier) ? croupier : game.croupier
-
-        let numJugadores = multijugador
-            ? (<span className="jugadores-number">{jugador.length}</span>)
-            : (<span className="jugadores-number">1</span>)
-
-
-        const naipesProps = {
-            nombre: game.nombre,
-            idJugador: game.idJugador,
-            idPartida: game.idPartida,
-            jugador: jugador_card,
-            croupier: croupier_card,
-            setHand: this.setHand,
-            reiniciarPartida: this.reiniciarPartida,
-            partida_finalizada: partida_finalizada,
-            jugadorActual: jugadorActual
-        }
+        if (irMenu) return <Redirect to="/"/>
+        if (!vista) return null
 
         return (
-            <>
-                <div className="flex-align-center  hide-on-med-and-down">
-                    <img src={logo} className="logo" alt=""/>
-                </div>
-
-                <nav>
-                    <div className="nav-wrapper nav-color">
-                        <ul id="nav-mobile" className="left">
-                            <li>
-                                <a className="font-text" href="/">Jugadores en sala{' '}{numJugadores}{' '}</a>
-                            </li>
-                            <li>
-                                <span className="font-text">Pin: {game.idPartida}</span>
-                            </li>
-                        </ul>
-                        <ul id="nav-mobile" className="padding-right-1 right">
-                            <button
-                                onClick={() => this.handleReiniciarPartida()}
-                                className="waves-effect waves-light btn"
-                                disabled={finalizar === 'deshabilitado' || !partida_finalizada}>
-                                <span className="font-text">
-                                    Seguir jugando
-                                </span>
-                            </button>
-                        </ul>
-                        <ul id="nav-mobile" className="padding-right-1 right">
-                            <span
-                                className="waves-effect waves-light btn">
-                                <Link to="/">
-                                    <span className="font-text">
-                                        Terminar juego
-                                    </span>
-                                </Link>
-                            </span>
-                        </ul>
-                    </div>
-                </nav>
-                <Naipes {...naipesProps}/>
-            </>
+            <div className="app">
+                <Nav>
+                    <button type="button" className="link-button" onClick={() => this.setState({ayuda: true})}>cómo se juega</button>
+                    <span>pin {partida.idPartida}</span>
+                    <span>créditos <strong>{vista.credito}</strong></span>
+                    <Link to="/" className="link-button" onClick={this.props.onTerminar}>terminar</Link>
+                </Nav>
+                <Naipes
+                    nombre={partida.nombre}
+                    vista={vista}
+                    onApostar={this.apostar}
+                    onPedir={this.pedir}
+                    onPlantarse={this.plantarse}
+                    onSeguir={this.seguirJugando}
+                />
+                {ayuda && <HowToPlay onClose={() => this.setState({ayuda: false})}/>}
+            </div>
         )
     }
 }
 
-export default Game;
+export default Game

@@ -1,48 +1,19 @@
-import React, {Component} from 'react'
-import {Redirect} from 'react-router-dom'
+import React from 'react'
+import {Link} from 'react-router-dom'
+import Nav from './Nav'
 
-class Start extends Component {
-
-    constructor(props) {
-        super(props);
-
-        this.state = {
-            redirect: false,
-            redirectTo: ''
-        }
-    }
-
-    crear = () => {
-        this.setState({redirect: true, redirectTo: '/crear'})
-    }
-
-    unirse = () => {
-        this.setState({redirect: true, redirectTo: '/unirse'})
-    }
-
-    render() {
-        const {redirectTo} = this.state
-
-        return (
-            <>
-                <div className="login-form">
-                    <div className="row">
-                        <div className="row">
-                            <button type="submit" className="waves-effect waves-light btn" onClick={this.crear}>
-                                Crear partida
-                            </button>
-                        </div>
-                        <div className="row">
-                            <button type="submit" className="waves-effect waves-light btn" onClick={this.unirse}>
-                                Unirse partida
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                {redirectTo && (<Redirect to={redirectTo}/>)}
-            </>
-        )
-    }
+function Start() {
+    return (
+        <div className="app">
+            <Nav/>
+            <main className="center-screen" style={{paddingBottom: "12vh"}}>
+                <div className="hero-number">21</div>
+                <Link to="/crear" className="play-btn" aria-label="jugar">
+                    <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M8 5.5v13l11-6.5z" fill="currentColor"/></svg>
+                </Link>
+            </main>
+        </div>
+    )
 }
 
 export default Start
