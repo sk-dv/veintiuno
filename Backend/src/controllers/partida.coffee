@@ -1,131 +1,53 @@
-Modelo = require '../models/Modelo'
 Partida = require '../models/Partida'
 Jugador = require '../models/Jugador'
 Croupier = require '../models/Croupier'
-BD = require '../bd/Modelo'
 
+# One game per PIN; games never share state.
+partidas = new Map()
 
-modelo = new Modelo()
-database = new BD()
-partida = null
+buscarPartida = (req) ->
+  partida = partidas.get(req.params.pin)
+  unless partida
+    error = new Error('No existe una partida con ese PIN')
+    error.status = 404
+    throw error
+  return partida
 
-generarMazos = () ->
-  {croupier} = partida
+# Wraps a handler so any error becomes a JSON response instead of a crash.
+manejar = (accion) -> (req, res) ->
+  try
+    res.send accion(req, buscarPartida)
+  catch error
+    res.status(error.status || 500).send {'message': error.message}
 
-  mazo = {
-    'croupier': {
-      'id': croupier.id,
-      'mano': croupier.mano
-    }
-  }
+exports.crearPartida = (req, res) ->
+  nombre = String(req.body.nombre || '').trim().slice(0, 30)
+  return res.status(400).send {'message': 'El nombre es obligatorio'} unless nombre
 
-  mazo.jugador = {
-    'id': partida.jugador.id,
-    'mano': partida.jugador.mano
-  }
+  partida = new Partida(new Croupier(), new Jugador(nombre))
+  partidas.set(partida.id, partida)
 
-  database.guardarPartida(partida)
+  res.status(201).send {'id_partida': partida.id, 'id_jugador': partida.jugador.id}
 
-  return mazo
+exports.verPartida = manejar (req, buscar) ->
+  buscar(req).vista()
 
-exports.getModelo = (req, res) ->
-  res.send modelo
+exports.apostar = manejar (req, buscar) ->
+  partida = buscar(req)
+  partida.apostar(req.body.id_jugador, req.body.cantidad)
+  partida.vista()
 
-exports.getIniciarPartida = (req, res) ->
-  partida.repartir()
-  res.send generarMazos()
+exports.pedir = manejar (req, buscar) ->
+  partida = buscar(req)
+  partida.pedir(req.body.id_jugador)
+  partida.vista()
 
-exports.getEvaluarPartida = (req, res) ->
-  res.send partida.evaluarPartida()
+exports.plantarse = manejar (req, buscar) ->
+  partida = buscar(req)
+  partida.plantarse(req.body.id_jugador)
+  partida.vista()
 
-exports.getReiniciarPartida = (req, res) ->
-  partida.reiniciar()
-  res.send generarMazos()
-
-exports.getTurno = (req, res) ->
-  res.send partida.obtenerTurno()
-
-exports.postCargarPartida = (req, res) ->
-  dbRes = await database.cargarPartida(req.body.id)
-
-  jugador = new Jugador(dbRes.jugador.nombre_jugador)
-  croupier = new Croupier()
-  partida_id = dbRes._id
-  baraja = dbRes.baraja
-  turno = dbRes.turno
-  multijugador = (dbRes.multijugador == "true")
-
-  croupier.id = dbRes.croupier.id
-  croupier.mano = dbRes.croupier.mano
-
-  jugador.id = dbRes.jugador.id
-  jugador.mano = dbRes.jugador.mano
-  jugador.cartera = dbRes.jugador.cartera
-  jugadores = dbRes.jugadores
-
-  partida = new Partida(croupier, jugador, multijugador, jugadores, baraja)
-
-  partida.baraja = baraja
-  partida.id = partida_id
-  partida.turno = turno
-
-  res.send partida
-
-exports.postCrearPartida = (req, res) ->
-  {nombre, multijugador} = req.body
-
-  croupier = new Croupier()
-  jugador = new Jugador(nombre)
-
-  partida = new Partida(croupier, jugador, multijugador)
-  modelo.push(partida)
-
-  database.crearEsquema(partida)
-
-  res.send {'id_partida': partida.id, 'id_jugador': jugador.id, 'multijugador': partida.multijugador}
-
-exports.postUnirsePartida = (req, res) ->
-  {idPartida, nombre} = req.body
-
-  for partida in modelo
-    if partida.id == idPartida
-      nuevoJugador = new Jugador(nombre)
-      partida.jugadores.push(nuevoJugador)
-      partida.repartirCartasJugador(nuevoJugador)
-      res.send {
-        id_partida: partida.id,
-        jugador: {
-          id: nuevoJugador.id,
-          mano: nuevoJugador.mano
-        },
-        croupier: partida.croupier
-        jugadores: partida.jugadores
-      }
-
-exports.postEliminarJugador = (req, res) ->
-  {id} = req.body
-  res.send {'status': partida.eliminarJugador(id)}
-
-exports.postAgregarJugador = (req, res) ->
-  {id, nombre} = req.body
-
-  jugador = new Jugador(nombre)
-
-  if partida.jugadores.length <= 2
-    partida = modelo.filter((partida) -> partida.id = id)[0]
-    partida.agregarJugador(jugador)
-
-  res.send if partida.jugadores.length <= 2 then {'partida': partida.id} else {'message': 'No se pueden agregar más jugadores'}
-
-exports.postEvaluarMano = (req, res) ->
-  {id} = req.body
-  res.send {'valor': partida.evaluarManoJugador(id)}
-
-exports.postApostar = (req, res) ->
-  {id, cantidad} = req.body
-  res.send {'credito': partida.apostar(id, cantidad)}
-
-exports.postPedir = (req, res) ->
-  {id} = req.body
-  res.send {'mano': partida.pedir(id)}
-
+exports.reiniciar = manejar (req, buscar) ->
+  partida = buscar(req)
+  partida.reiniciar(req.body.id_jugador)
+  partida.vista()

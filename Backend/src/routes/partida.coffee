@@ -3,18 +3,11 @@ partidaController = require('../controllers/partida')
 
 router = express.Router()
 
-router.get '/partidas', partidaController.getModelo
-router.get '/iniciar', partidaController.getIniciarPartida
-router.get '/evaluar-partida', partidaController.getEvaluarPartida
-router.get '/reiniciar', partidaController.getReiniciarPartida
-router.get '/turno' , partidaController.getTurno
-
-router.post '/crear-partida', partidaController.postCrearPartida
-router.post '/unirse-partida', partidaController.postUnirsePartida
-router.post '/cargar-partida', partidaController.postCargarPartida
-router.post '/agregar-jugador', partidaController.postAgregarJugador
-router.post '/evaluar-mano', partidaController.postEvaluarMano
-router.post '/apostar', partidaController.postApostar
-router.post '/pedir', partidaController.postPedir
+router.post '/partidas', partidaController.crearPartida
+router.get '/partidas/:pin', partidaController.verPartida
+router.post '/partidas/:pin/apostar', partidaController.apostar
+router.post '/partidas/:pin/pedir', partidaController.pedir
+router.post '/partidas/:pin/plantarse', partidaController.plantarse
+router.post '/partidas/:pin/reiniciar', partidaController.reiniciar
 
 module.exports = router

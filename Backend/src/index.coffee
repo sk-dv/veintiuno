@@ -24,5 +24,11 @@ partidaRoutes = require('./routes/partida')
 
 app.use partidaRoutes
 
+app.use (req, res) ->
+  res.status(404).send {'message': 'Ruta no encontrada'}
+
+app.use (error, req, res, next) ->
+  res.status(error.status || 500).send {'message': if error.status then error.message else 'Error interno'}
+
 app.listen 8080
 log green 'Server online in port 8080'
