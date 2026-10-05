@@ -22,10 +22,10 @@ echo "==> Dependencias raiz"
 npm install
 
 echo "==> Dependencias Backend"
-npm --prefix Backend install
+npm --prefix backend install
 
 echo "==> Dependencias Frontend"
-npm --prefix Frontend install
+npm --prefix frontend install
 
 echo ""
 echo "Setup completo. Ahora ejecuta:  npm run dev"

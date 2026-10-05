@@ -1,6 +1,6 @@
 # Betting — use cases
 
-Each case has a test in `Backend/test/reglas.test.coffee` (`npm test` in `Backend`).
+Each case has a test in `backend/test/reglas.test.coffee` (`npm test` in `backend`).
 
 | # | Case | Expected |
 |---|---|---|

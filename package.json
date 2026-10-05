@@ -9,8 +9,8 @@
   "scripts": {
     "setup": "bash scripts/setup.sh",
     "dev": "bash scripts/dev.sh",
-    "backend": "npm --prefix Backend run dev",
-    "frontend": "npm --prefix Frontend start"
+    "backend": "npm --prefix backend run dev",
+    "frontend": "npm --prefix frontend start"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"

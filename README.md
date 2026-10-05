@@ -2,8 +2,8 @@
 
 Single-player blackjack (21) against the dealer. Monorepo:
 
-- **Backend/** — Node + Express in **CoffeeScript**. REST API; games live in memory (no database).
-- **Frontend/** — React (Create React App), talks to the API with Axios.
+- **backend/** — Node + Express in **CoffeeScript**. REST API; games live in memory (no database).
+- **frontend/** — React (Create React App), talks to the API with Axios.
 
 ## Run it
 
@@ -24,7 +24,7 @@ Open http://localhost:3000. Games are lost when the Backend restarts; that is in
 | `npm run dev`      | Starts Backend and Frontend together.          |
 | `npm run backend`  | Backend only.                                  |
 | `npm run frontend` | Frontend only.                                 |
-| `npm --prefix Backend test` | Runs the rule tests.                  |
+| `npm --prefix backend test` | Runs the rule tests.                  |
 
 ## How it fits together
 
@@ -32,7 +32,7 @@ Open http://localhost:3000. Games are lost when the Backend restarts; that is in
 Frontend (React :3000)  --REST-->  Backend (Express :8080)  -->  games in memory
 ```
 
-The Frontend finds the API through `Frontend/.env` (`REACT_APP_LOCALHOST`).
+The Frontend finds the API through `frontend/.env` (`REACT_APP_LOCALHOST`).
 
 - Pressing play creates a game; the player's name is edited on the table and remembered.
 - The interactive tutorial opens on the first game and from "cómo se juega" in the top bar.

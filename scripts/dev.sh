@@ -13,5 +13,5 @@ fi
 nvm use >/dev/null
 
 npx concurrently -k -n backend,frontend -c blue,green \
-  "npm --prefix Backend run dev" \
-  "npm --prefix Frontend start"
+  "npm --prefix backend run dev" \
+  "npm --prefix frontend start"
